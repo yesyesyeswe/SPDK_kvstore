@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include "kvstore.h"
+#include "mymalloc.h"
 
 #define MAX_TABLE_SIZE 1024
 
@@ -30,11 +31,11 @@ hashtable_t *hash = NULL;
 
 #ifdef KV_HASH_DEBUG
 void* kvstore_malloc(size_t size) {
-	return malloc(size);
+	return mymalloc(size);
 }
 
 void kvstore_free(void *ptr) {
-	return free(ptr);
+	return myfree(ptr);
 }
 #endif
 

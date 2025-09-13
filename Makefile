@@ -7,7 +7,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = kvstore
-C_SRCS := spdk_server.c kvstore.c kv_array.c kv_rbtree.c kv_hash.c
+C_SRCS := spdk_server.c kvstore.c kv_array.c kv_rbtree.c kv_hash.c mymalloc.c
 
 SPDK_LIB_LIST = $(SOCK_MODULES_LIST)
 SPDK_LIB_LIST += event sock

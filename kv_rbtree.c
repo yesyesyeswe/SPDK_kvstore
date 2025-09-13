@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include "kvstore.h"
+#include "mymalloc.h"
 
 #define RED				1
 #define BLACK 			2
@@ -18,11 +19,11 @@ typedef int KEY_TYPE;
 
 #ifdef KV_RBTREE_DEBUG
 void* kvstore_malloc(size_t size) {
-	return malloc(size);
+	return mymalloc(size);
 }
 
 void kvstore_free(void *ptr) {
-	return free(ptr);
+	return myfree(ptr);
 }
 #endif
 

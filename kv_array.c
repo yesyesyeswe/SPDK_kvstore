@@ -4,16 +4,17 @@
 #include <string.h>
 
 #include "kvstore.h"
+#include "mymalloc.h"
 
 #define MAX_TABLE_SIZE  1024
 
 #ifdef KV_ARRAY_DEBUG
 void* kvstore_malloc(size_t size) {
-	return malloc(size);
+	return mymalloc(size);
 }
 
 void kvstore_free(void *ptr) {
-	return free(ptr);
+	return myfree(ptr);
 }
 #endif
 
@@ -46,7 +47,7 @@ int kv_array_init(void) {
         return -1;
     }
 
-    store->table = (kvpair_t *)malloc(sizeof(kvpair_t) * MAX_TABLE_SIZE);
+    store->table = (kvpair_t *)kvstore_malloc(sizeof(kvpair_t) * MAX_TABLE_SIZE);
     if(!store->table) {
         fprintf(stderr, "malloc store table error\n");
         return -1;
