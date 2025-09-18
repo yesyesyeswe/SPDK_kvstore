@@ -241,15 +241,10 @@ static void sdpk_server_start(void *arg) {
 	return ;
 }
 
-
-// rte_eal_init();
 // ./sdpk_server -H 0.0.0.0 -P 8888 , -N 
 
 // epoll, 
 // reactor
-
-// context --> 
-// ntyco
 
 // int main(int argc, char *argv[]) {
 int spdk_entry(int argc, char *argv[]) {
