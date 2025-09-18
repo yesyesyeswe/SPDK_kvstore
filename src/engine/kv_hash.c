@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <pthread.h>
 
-#include "kvstore.h"
-#include "mymalloc.h"
+#include "../kvstore.h"
+#include "../mm/mymalloc.h"
 
 #define MAX_TABLE_SIZE 1024
 
@@ -29,16 +29,6 @@ typedef struct hashtable_s {
 
 hashtable_t *hash = NULL;
 
-#ifdef KV_HASH_DEBUG
-void* kvstore_malloc(size_t size) {
-	return mymalloc(size);
-}
-
-void kvstore_free(void *ptr) {
-	return myfree(ptr);
-}
-#endif
-
 static int _hash(const char* key, int size) {
     if(!key) return -1;
     int sum = 0;
@@ -51,18 +41,18 @@ static int _hash(const char* key, int size) {
 }
 
 static hashnode_t *_create_node(const char *key, const char *value) {
-    hashnode_t *node = (hashnode_t *)kvstore_malloc(sizeof(hashnode_t));
+    hashnode_t *node = (hashnode_t *)mymalloc(sizeof(hashnode_t));
     if(!node) return NULL;
 
-    char* kcopy = kvstore_malloc(strlen(key) + 1);
+    char* kcopy = mymalloc(strlen(key) + 1);
     if(!kcopy) {
         fprintf(stderr, "kcopy malloc failed\n");
         return NULL;
     }
 
-    char* vcopy = kvstore_malloc(strlen(value) + 1);
+    char* vcopy = mymalloc(strlen(value) + 1);
     if(!vcopy) {
-        kvstore_free(kcopy);
+        myfree(kcopy);
         fprintf(stderr, "vcopy malloc failed\n");
         return NULL;
     }
@@ -78,10 +68,10 @@ static hashnode_t *_create_node(const char *key, const char *value) {
 
 int kv_hash_init(void) {
     
-    hash = (hashtable_t *)kvstore_malloc(sizeof(hashtable_t));
+    hash = (hashtable_t *)mymalloc(sizeof(hashtable_t));
     if(!hash) return -1;
 
-    hash->nodes = (hashnode_t **)kvstore_malloc(sizeof(hashnode_t*) * MAX_TABLE_SIZE);
+    hash->nodes = (hashnode_t **)mymalloc(sizeof(hashnode_t*) * MAX_TABLE_SIZE);
 
     if (!hash->nodes) return -1;
 
@@ -104,16 +94,16 @@ void kv_hash_destroy(void) {
         while(node) {
             hashnode_t *prev = node;
             node = node->next;
-            kvstore_free(prev->key);
-            kvstore_free(prev->value);
-            kvstore_free(prev);
+            myfree(prev->key);
+            myfree(prev->value);
+            myfree(prev);
         }
     }
-    kvstore_free(hash->nodes);
+    myfree(hash->nodes);
     pthread_mutex_unlock(&hash->lock);
     pthread_mutex_destroy(&hash->lock);
 
-    kvstore_free(hash);
+    myfree(hash);
 }
 
 int kv_hash_set(const char* key, const char *value) {
@@ -171,8 +161,8 @@ int kv_hash_delete(char *key) {
     hashnode_t *prev = node;
     while(node) {
         if(strcmp(node->key, key) == 0) {
-            kvstore_free(node->key);
-            kvstore_free(node->value);
+            myfree(node->key);
+            myfree(node->value);
 
             // not the first
             if(node != hash->nodes[idx]) {
@@ -181,7 +171,7 @@ int kv_hash_delete(char *key) {
                 hash->nodes[idx] = node->next;
             }      
 
-            kvstore_free(node);  
+            myfree(node);  
 
             pthread_mutex_unlock(&hash->lock);
             return 0;
@@ -202,7 +192,7 @@ int kv_hash_modify(char *key, char* value) {
     while(node) {
         if(strcmp(node->key, key) == 0) {
 
-            char* vcopy = (char *)kvstore_malloc(strlen(value) + 1);
+            char* vcopy = (char *)mymalloc(strlen(value) + 1);
             if(!vcopy) {
                 fprintf(stderr, "vcopy malloc failed\n");
                 return -1;
@@ -210,7 +200,7 @@ int kv_hash_modify(char *key, char* value) {
             strcpy(vcopy, value);
 
             pthread_mutex_lock(&hash->lock);
-            kvstore_free(node->value);
+            myfree(node->value);
             node->value = vcopy;
             pthread_mutex_unlock(&hash->lock);
 

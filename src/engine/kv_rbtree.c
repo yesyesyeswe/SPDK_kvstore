@@ -3,8 +3,8 @@
 #include <string.h>
 #include <pthread.h>
 
-#include "kvstore.h"
-#include "mymalloc.h"
+#include "../kvstore.h"
+#include "../mm/mymalloc.h"
 
 #define RED				1
 #define BLACK 			2
@@ -15,16 +15,6 @@
 typedef char* KEY_TYPE;
 #else
 typedef int KEY_TYPE;
-#endif
-
-#ifdef KV_RBTREE_DEBUG
-void* kvstore_malloc(size_t size) {
-	return mymalloc(size);
-}
-
-void kvstore_free(void *ptr) {
-	return myfree(ptr);
-}
 #endif
 
 typedef struct _rbtree_node {
@@ -380,13 +370,13 @@ static void rbtree_traversal(rbtree *T, rbtree_node *node) {
 }
 
 int kv_rbtree_init(void) {
-	tree = (rbtree *)kvstore_malloc(sizeof(rbtree));
+	tree = (rbtree *)mymalloc(sizeof(rbtree));
 	if (!tree) {
 		printf("malloc failed\n");
 		return -1;
 	}
 
-	tree->nil = (rbtree_node*)kvstore_malloc(sizeof(rbtree_node));
+	tree->nil = (rbtree_node*)mymalloc(sizeof(rbtree_node));
 	tree->nil->color = BLACK;
 	tree->nil->left = tree->nil;
 	tree->nil->right = tree->nil;
@@ -408,27 +398,27 @@ void kv_rbtree_destroy(void) {
 		node = rbtree_delete(tree, node);
 		pthread_mutex_unlock(&tree->lock);
 		
-		kvstore_free(node);
+		myfree(node);
 	}
 
-	kvstore_free(tree->nil);
+	myfree(tree->nil);
 }
 
 int kv_rbtree_set(const char* key, const char *value) {
 	if(!tree || !key || !value) return -1;
 
-	rbtree_node *node = (rbtree_node*)kvstore_malloc(sizeof(rbtree_node));
+	rbtree_node *node = (rbtree_node*)mymalloc(sizeof(rbtree_node));
 	if(!node) return -1;
 
-	char* kcopy = kvstore_malloc(strlen(key) + 1);
+	char* kcopy = mymalloc(strlen(key) + 1);
     if(!kcopy) {
         fprintf(stderr, "kcopy malloc failed\n");
         return -1;
     }
 
-    char* vcopy = kvstore_malloc(strlen(value) + 1);
+    char* vcopy = mymalloc(strlen(value) + 1);
     if(!vcopy) {
-        kvstore_free(kcopy);
+        myfree(kcopy);
         fprintf(stderr, "vcopy malloc failed\n");
         return -1;
     }
@@ -465,9 +455,9 @@ int kv_rbtree_delete(char *key) {
 	pthread_mutex_lock(&tree->lock);
 	node = rbtree_delete(tree, node);
 	if(node == tree->nil) {
-		kvstore_free(node->key);
-		kvstore_free(node->value);
-		kvstore_free(node);
+		myfree(node->key);
+		myfree(node->value);
+		myfree(node);
 	}
 	pthread_mutex_unlock(&tree->lock);
 	
@@ -481,7 +471,7 @@ int kv_rbtree_modify(char *key, char* value) {
 		return -1;
 	}
 
-	char* vcopy = kvstore_malloc(strlen(value) + 1);
+	char* vcopy = mymalloc(strlen(value) + 1);
     if(!vcopy) {
         fprintf(stderr, "vcopy malloc failed\n");
         return -1;
@@ -489,7 +479,7 @@ int kv_rbtree_modify(char *key, char* value) {
 	strcpy(vcopy, value);
 
 	pthread_mutex_lock(&tree->lock);
-	kvstore_free(node->value);
+	myfree(node->value);
 	node->value = vcopy;
 	pthread_mutex_unlock(&tree->lock);
 
@@ -528,23 +518,23 @@ int main() {
 	return 0;
 
 #elif KEYTYPE_ENABLE
-	rbtree *T = (rbtree *)kvstore_malloc(sizeof(rbtree));
+	rbtree *T = (rbtree *)mymalloc(sizeof(rbtree));
 	if (T == NULL) {
 		printf("malloc failed\n");
 		return -1;
 	}
 
-	T->nil = (rbtree_node*)kvstore_malloc(sizeof(rbtree_node));
+	T->nil = (rbtree_node*)mymalloc(sizeof(rbtree_node));
 	T->nil->color = BLACK;
 	T->root = T->nil;
 
-	rbtree_node *node1 = (rbtree_node*)kvstore_malloc(sizeof(rbtree_node));
+	rbtree_node *node1 = (rbtree_node*)mymalloc(sizeof(rbtree_node));
 
 	strncpy(node1->key, "city", MAX_KEY_LEN);
 	strncpy(node1->value, "sz", MAX_VALUE_LEN);
 	rbtree_insert(T, node1);
 
-	rbtree_node *node2 = (rbtree_node*)kvstore_malloc(sizeof(rbtree_node));
+	rbtree_node *node2 = (rbtree_node*)mymalloc(sizeof(rbtree_node));
 
 	strncpy(node2->key, "server", MAX_KEY_LEN);
 	strncpy(node2->value, "nginx", MAX_VALUE_LEN);
@@ -565,20 +555,20 @@ int main() {
 #else
 	int keyArray[20] = {24,25,13,35,23, 26,67,47,38,98, 20,19,17,49,12, 21,9,18,14,15};
 
-	rbtree *T = (rbtree *)kvstore_malloc(sizeof(rbtree));
+	rbtree *T = (rbtree *)mymalloc(sizeof(rbtree));
 	if (T == NULL) {
 		printf("malloc failed\n");
 		return -1;
 	}
 	
-	T->nil = (rbtree_node*)kvstore_malloc(sizeof(rbtree_node));
+	T->nil = (rbtree_node*)mymalloc(sizeof(rbtree_node));
 	T->nil->color = BLACK;
 	T->root = T->nil;
 
 	rbtree_node *node = T->nil;
 	int i = 0;
 	for (i = 0;i < 20;i ++) {
-		node = (rbtree_node*)kvstore_malloc(sizeof(rbtree_node));
+		node = (rbtree_node*)mymalloc(sizeof(rbtree_node));
 		node->key = keyArray[i];
 		node->value = NULL;
 
@@ -593,7 +583,7 @@ int main() {
 
 		rbtree_node *node = rbtree_search(T, keyArray[i]);
 		rbtree_node *cur = rbtree_delete(T, node);
-		kvstore_free(cur);
+		myfree(cur);
 
 		rbtree_traversal(T, T->root);
 		printf("----------------------------------------\n");

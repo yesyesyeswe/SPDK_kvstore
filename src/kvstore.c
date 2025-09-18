@@ -14,15 +14,6 @@ static const char *commands[] = {
 
 int spdk_entry(int argc, char *argv[]);
 
-void* kvstore_malloc(size_t size) {
-	return malloc(size);
-}
-
-void kvstore_free(void *ptr) {
-	return free(ptr);
-}
-
-
 static int kvs_split_tokens(char **tokens, char *msg) {
 	
 	int count = 0;

@@ -7,22 +7,28 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = kvstore
-C_SRCS := spdk_server.c kvstore.c kv_array.c kv_rbtree.c kv_hash.c mymalloc.c
+
+TOP_DIR    := .
+SRC_DIR    := $(TOP_DIR)/src
+C_SRCS := $(shell find $(SRC_DIR) -type f -name '*.c')
 
 SPDK_LIB_LIST = $(SOCK_MODULES_LIST)
 SPDK_LIB_LIST += event sock
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-
 test_array:
-	gcc -g -O0 -o kv_array kv_array.c -DKV_ARRAY_DEBUG
+	gcc -g -O0 -o $(SRC_DIR)/engine/kv_array $(SRC_DIR)/engine/kv_array.c $(SRC_DIR)/mm/mymalloc.c -DKV_ARRAY_DEBUG
 
 test_rbtree:
-	gcc -g -O0 -o kv_rbtree kv_rbtree.c -DKV_RBTREE_DEBUG
+	gcc -g -O0 -o $(SRC_DIR)/engine/kv_rbtree $(SRC_DIR)/engine/kv_rbtree.c $(SRC_DIR)/mm/mymalloc.c -DKV_RBTREE_DEBUG
 
 test_hash:
-	gcc -g -O0 -o kv_hash kv_hash.c -DKV_HASH_DEBUG
+	gcc -g -O0 -o $(SRC_DIR)/engine/kv_hash $(SRC_DIR)/engine/kv_hash.c $(SRC_DIR)/mm/mymalloc.c -DKV_HASH_DEBUG
 
+D_OBJ := $(shell find $(SRC_DIR) -type f \( -name '*.d' -o -name '*.o' \))
 
-PHONY: test_array, test_rbtree, test_hash
+clean:
+	@rm $(D_OBJ) $(APP)
+
+.PHONY: test_array, test_rbtree, test_hash, clean

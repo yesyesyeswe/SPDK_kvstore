@@ -12,7 +12,7 @@
 
 #include <string.h>
 
-#include "kvstore.h"
+#include "../kvstore.h"
 
 int kvstore_request(char *msg, ssize_t len);
 
@@ -151,7 +151,8 @@ static int spdk_server_accept(void *arg) {
 
 	// printf("spdk_server_accept\n");
 	if (!g_running) {
-		//...
+		spdk_sock_close(&ctx->sock);
+		return SPDK_POLLER_IDLE;		
 	} 
 
 	while (1) {
